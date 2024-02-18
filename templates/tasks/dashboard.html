@@ -25,7 +25,7 @@
                         </thead>
                         <tbody>
                             {% for task in tasks %}
-                            <tr>
+                            <tr id="task-row-{{ task.id }}" {% if task.done %}class="table-success"{% endif %}>
                                 <th scope="row">{{ task.title }}</th>
                                 <td>{{task.description}}</td>
                                 <td>{{ task.get_priority_display }}</td>
@@ -83,8 +83,10 @@
                     if (response.done) {
                         var dateCompleted = new Date(response.date_completed);
                         dateCompletedCell.innerText = dateCompleted.toLocaleString();
+                        checkbox.closest('tr').classList.add('table-success');
                     } else {
                         dateCompletedCell.innerText = '';
+                        checkbox.closest('tr').classList.remove('table-success');
                     }
                 } else {
                     console.error('Error al actualizar el estado de la tarea.');

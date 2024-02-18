@@ -46,6 +46,7 @@ def register(request):
             # #messages.success(request, 'Se registro el usuario exitosamente')
 
             # return redirect('/accounts/login/?command=verification&email='+email)
+            return redirect('/accounts/login/')
 
 
     context = {
