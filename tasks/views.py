@@ -1,5 +1,9 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.contrib.auth.forms import UserCreationForm
 
-def helloworld(request):
-    return HttpResponse('Hello World')
+def home(request):
+    return render(request, 'tasks/home.html')
+
+def signup(request):
+    context = {'form' : UserCreationForm}
+    return render(request, 'accounts/signup.html', context)
