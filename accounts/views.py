@@ -64,7 +64,7 @@ def login(request):
         if user is not None:    
             auth.login(request, user)
             messages.success(request, 'Has iniciado sesion exitosamente')
-            return redirect('home')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Las credenciales son incorrectas')
             return redirect('login')
