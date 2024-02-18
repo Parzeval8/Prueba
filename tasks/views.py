@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.contrib.auth.decorators import login_required
 from .forms import TaskForm
 from .models import Task
@@ -56,12 +56,21 @@ def update_done(request):
     if request.method == 'POST' and request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         task_id = request.POST.get('task_id')
         done = request.POST.get('done') == 'true'
+        date_completed_str = request.POST.get('date_completed')
         task = Task.objects.get(id=task_id)
         task.done = done
-        if done:
-            task.date_completed = timezone.now()
+        if done and date_completed_str:
+            date_completed = parse_datetime(date_completed_str)
+            task.date_completed = date_completed
         else:
             task.date_completed = None
         task.save()
         return JsonResponse({'success': True, 'done': done, 'date_completed': str(task.date_completed)})
     return JsonResponse({'success': False})
+
+@login_required(login_url='login')
+def delete(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    if request.method == 'POST':
+        task.delete()
+    return redirect('dashboard')

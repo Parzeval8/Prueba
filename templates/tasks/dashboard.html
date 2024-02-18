@@ -4,10 +4,11 @@
 {% block content %}
 
 <h1>task dashboard</h1>
-<main class="col-md-9">
+<main class="col-md-12">
     <article class="card">
         <header class="card-header">
             <strong class="d-inline-block mr-3"> Task list </strong>
+            <a href="{% url 'create' %}" class="btn btn-success">Create Task</a>
         </header>
         <div class="card-body">
             <div class="row">
@@ -15,12 +16,12 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th scope="col">Title</th>
-                                <th scope="col">Description</th>
-                                <th scope="col">Priority</th>
-                                <th scope="col">Due date</th>
-                                <th scope="col">Done</th>
-                                <th scope="col">Done date</th>
+                                <th scope="col" class="col-2">Title</th>
+                                <th scope="col" class="col-4">Description</th>
+                                <th scope="col" class="col-1">Priority</th>
+                                <th scope="col" class="col-2">Due date</th>
+                                <th scope="col" class="col-1">Done</th>
+                                <th scope="col" class="col-2">Done date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -35,7 +36,12 @@
                                 </td>
                                 <td id="date-completed-{{ task.id }}">{{task.date_completed}}</td>
                                 <td>
-                                    <a href="{% url 'update' task.id %}" class="btn btn-primary">Edit</a>
+                                    <a href="{% url 'update' task.id %}" class="btn btn-warning">Edit</a>
+                                    <form action="{% url 'delete' task.id %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                    
                                 </td>
                             </tr>
                             {% endfor %}
@@ -68,13 +74,17 @@
         var taskId = checkbox.id.split('-')[2];
         var done = checkbox.checked;
 
+        // Obtener la fecha y hora actual en formato ISO 8601
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+        var now = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
         $.ajax({
             type: "POST",
             url: "{% url 'update_done' %}",
             data: {
                 csrfmiddlewaretoken: getCSRFToken(),
                 task_id: taskId,
-                done: done
+                done: done,
+                date_completed: now
             },
             success: function(response) {
                 if (response.success) {
@@ -82,7 +92,7 @@
                     var dateCompletedCell = document.getElementById('date-completed-' + taskId);
                     if (response.done) {
                         var dateCompleted = new Date(response.date_completed);
-                        dateCompletedCell.innerText = dateCompleted.toLocaleString();
+                        dateCompletedCell.innerText = dateCompleted.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
                         checkbox.closest('tr').classList.add('table-success');
                     } else {
                         dateCompletedCell.innerText = '';
