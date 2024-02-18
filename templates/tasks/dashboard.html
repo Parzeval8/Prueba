@@ -4,5 +4,96 @@
 {% block content %}
 
 <h1>task dashboard</h1>
+<main class="col-md-9">
+    <article class="card">
+        <header class="card-header">
+            <strong class="d-inline-block mr-3"> Task list </strong>
+        </header>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Title</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Priority</th>
+                                <th scope="col">Due date</th>
+                                <th scope="col">Done</th>
+                                <th scope="col">Done date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <th scope="row">{{ task.title }}</th>
+                                <td>{{task.description}}</td>
+                                <td>{{ task.get_priority_display }}</td>
+                                <td>{{task.task_due}}</td>
+                                <td>
+                                    <input type="checkbox" id="done-checkbox-{{ task.id }}" {% if task.done %}checked{% endif %} onchange="updateTask(this)">
+                                </td>
+                                <td id="date-completed-{{ task.id }}">{{task.date_completed}}</td>
+                                <td>
+                                    <a href="{% url 'update' task.id %}" class="btn btn-primary">Edit</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div> <!-- row.// -->
+        </div> <!-- card-body .// -->
 
+    </article> <!-- order-group.// -->
+</main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function getCSRFToken() {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateTask(checkbox) {
+        var taskId = checkbox.id.split('-')[2];
+        var done = checkbox.checked;
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'update_done' %}",
+            data: {
+                csrfmiddlewaretoken: getCSRFToken(),
+                task_id: taskId,
+                done: done
+            },
+            success: function(response) {
+                if (response.success) {
+                    checkbox.checked = response.done;
+                    var dateCompletedCell = document.getElementById('date-completed-' + taskId);
+                    if (response.done) {
+                        var dateCompleted = new Date(response.date_completed);
+                        dateCompletedCell.innerText = dateCompleted.toLocaleString();
+                    } else {
+                        dateCompletedCell.innerText = '';
+                    }
+                } else {
+                    console.error('Error al actualizar el estado de la tarea.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error de solicitud AJAX:', error);
+            }
+        });
+    }
+</script>
 {% endblock %}

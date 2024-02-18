@@ -5,11 +5,11 @@ from accounts.models import Account
 class Task(models.Model):
 
     PRIORITY_CHOICES = [
-        (1, '1'),
-        (2, '2'),
-        (3, '3'),
-        (4, '4'),
-        (5, '5'),
+        (1, 'Lowest'),
+        (2, 'Low'),
+        (3, 'Normal'),
+        (4, 'High'),
+        (5, 'Highest'),
     ]
 
     title = models.CharField(max_length=100, blank=False, null=False)

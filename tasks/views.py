@@ -1,10 +1,15 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .forms import TaskForm
+from .models import Task
 
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'tasks/dashboard.html')
+    tasks = Task.objects.filter(user=request.user)
+    context = {'tasks': tasks}
+    return render(request, 'tasks/dashboard.html', context)
 
 @login_required(login_url='login')
 def create(request):
@@ -17,4 +22,46 @@ def create(request):
         new_task.user = request.user
         new_task.save()
         return redirect('dashboard')
-        
+
+@login_required(login_url='login')
+def update(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    if request.method == 'GET':
+        form = TaskForm(instance=task)  # Pasa la instancia de la tarea al formulario
+        return render(request, 'tasks/update.html', {'form': form})
+    elif request.method == 'POST':
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+        else:
+            return render(request, 'tasks/update.html', {'form': form})
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    print(task)
+    if request.method == 'GET':
+        form = TaskForm(instance=task)
+        return render(request, 'tasks/update.html', {'form': form, 'task': task})
+    elif request.method == 'POST':
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+        else:
+            print(form)
+            # En caso de que el formulario no sea válido, vuelve a renderizar el formulario con los errores
+            return render(request, 'tasks/update.html', {'form': form, 'task': task})
+
+@login_required(login_url='login')
+def update_done(request):
+    if request.method == 'POST' and request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        task_id = request.POST.get('task_id')
+        done = request.POST.get('done') == 'true'
+        task = Task.objects.get(id=task_id)
+        task.done = done
+        if done:
+            task.date_completed = timezone.now()
+        else:
+            task.date_completed = None
+        task.save()
+        return JsonResponse({'success': True, 'done': done, 'date_completed': str(task.date_completed)})
+    return JsonResponse({'success': False})
