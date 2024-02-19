@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.utils.dateparse import parse_datetime
 from django.contrib.auth.decorators import login_required
 from .forms import TaskForm
 from .models import Task
@@ -60,7 +59,7 @@ def update_done(request):
         task = Task.objects.get(id=task_id)
         task.done = done
         if done and date_completed_str:
-            date_completed = parse_datetime(date_completed_str)
+            date_completed = date_completed_str
             task.date_completed = date_completed
         else:
             task.date_completed = None
