@@ -8,13 +8,21 @@
     <article class="card">
         <header class="card-header bg-primary text-white">
             <strong class="d-inline-block mr-3">Task List</strong>
+            <div class="form-group d-inline-block">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select" class="form-control">
+                    <option value="title">Title</option>
+                    <option value="priority">Priority</option>
+                    <option value="due-date">Due Date</option>
+                </select>
+            </div>
             <a href="{% url 'create' %}" class="btn btn-success"><i class="fas fa-plus"></i> Create Task</a>
         </header>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-12">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table id="task-table" class="table table-hover">
                             <thead class="thead-light">
                                 <tr>
                                     <th scope="col" class="col-2">Title</th>
@@ -31,7 +39,7 @@
                                 <tr id="task-row-{{ task.id }}" {% if task.done %}class="table-success"{% endif %} >
                                     <td>{{ task.title }}</td>
                                     <td>{{ task.description }}</td>
-                                    <td>{{ task.get_priority_display }}</td>
+                                    <td class="priority">{{ task.get_priority_display }}</td>
                                     <td class="due-date">{{ task.task_due }}</td>
                                     <td>
                                         <input class="done" type="checkbox" id="done-checkbox-{{ task.id }}" {% if task.done %}checked{% endif %} onchange="updateTask(this)">
@@ -179,6 +187,59 @@
         return str;
     }
 
+    //Ordenar la tabla de tareas
+    window.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('sort-select').addEventListener('change', function() {
+            sortTasks(this.value);
+        });
+
+        function sortTasks(option) {
+            var rows = Array.from(document.querySelectorAll('#task-table tbody tr'));
+            var sortedRows = rows.sort(function(a, b) {
+                var valueA, valueB;
+                if (option === 'priority') {
+                    var priorityCellA = a.querySelector('.priority');
+                    var priorityCellB = b.querySelector('.priority');
+                    valueA = getPriorityValue(priorityCellA.textContent.trim());
+                    valueB = getPriorityValue(priorityCellB.textContent.trim());
+                    console.log('a '+(valueA - valueB))
+                    return valueA - valueB;
+                } else if (option === 'due-date') {
+                    valueA = new Date(a.querySelector('.due-date').textContent);
+                    valueB = new Date(b.querySelector('.due-date').textContent);
+                    return valueA - valueB;
+                } else if (option === 'title') {
+                    valueA = a.querySelector('td:first-child').textContent;
+                    valueB = b.querySelector('td:first-child').textContent;
+                    return valueA.localeCompare(valueB);
+                }
+                
+            });
+        
+            var tbody = document.querySelector('#task-table tbody');
+            sortedRows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        }
+
+        function getPriorityValue(priorityText) {
+            switch (priorityText) {
+                case 'Lowest':
+                    return 5;
+                case 'Low':
+                    return 4;
+                case 'Normal':
+                    return 3;
+                case 'High':
+                    return 2;
+                case 'Highest':
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+    });
+    
     // Llamar a la función cuando se cargue la página
     window.addEventListener('DOMContentLoaded', function() {
         highlightOverdueTasks();

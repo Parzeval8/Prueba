@@ -18,18 +18,18 @@
 
                     <div class="form-row">
                         <div class="col form-group">
-                            <label>Nombre</label>
+                            <label>Frist name</label>
                             {{ form.first_name }}
                         </div> <!-- form-group end.// -->
                         <div class="col form-group">
-                            <label>Apellido</label>
+                            <label>Last name</label>
                             {{ form.last_name }}
                         </div> <!-- form-group end.// -->
                     </div> <!-- form-row end.// -->
 
                     <div class="form-row">
                         <div class="col form-group">
-                            <label>Numero Telefonico</label>
+                            <label>Phone</label>
                             {{ form.phone_number }}
                         </div> <!-- form-group end.// -->
                         <div class="col form-group">
@@ -37,22 +37,18 @@
                             {{ form.email }}
                         </div> <!-- form-group end.// -->
                     </div> <!-- form-row end.// -->
-
-
-
-
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label>Crear password</label>
+                            <label>Password</label>
                              {{ form.password }}
                         </div> <!-- form-group end.// -->
                         <div class="form-group col-md-6">
-                            <label>Repetir password</label>
+                            <label>Confirm password</label>
                             {{ form.confirm_password }}
                         </div> <!-- form-group end.// -->
                     </div>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary btn-block"> Registrar  </button>
+                        <button type="submit" class="btn btn-primary btn-block"> Signup  </button>
                     </div> <!-- form-group// -->
 
                     {{ form.email.errors }}
@@ -61,7 +57,7 @@
                 </form>
             </article><!-- card-body.// -->
         </div> <!-- card .// -->
-        <p class="text-center mt-4">Tienes una cuenta? <a href="">Log In</a></p>
+        <p class="text-center mt-4">You have an account? <a href="">Log In</a></p>
         <br><br>
     <!-- ============================ COMPONENT REGISTER  END.// ================================= -->
 

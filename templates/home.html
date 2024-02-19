@@ -4,6 +4,20 @@
 
 {% block content %}
 
-<h1>home</h1>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="mb-4">Welcome to Task Manager</h1>
+            <p class="lead">Task Manager is a simple yet powerful application for managing your tasks efficiently.</p>
+            <p>With Task Manager, you can:</p>
+            <ul class="list-unstyled">
+                <li>Create tasks with titles, descriptions, priorities, and due dates.</li>
+                <li>Mark tasks as completed once they are done.</li>
+                <li>Update and delete tasks as needed.</li>
+            </ul>
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg mt-4">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
