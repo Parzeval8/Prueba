@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<h1 class="display-4 text-center mb-4">Task Dashboard</h1>
+<main class="col-md-12">
+    <article class="card">
+        <header class="card-header bg-primary text-white">
+            <strong class="d-inline-block mr-3">Task List</strong>
+            <div class="form-group d-inline-block">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select" class="form-control">
+                    <option value="title">Title</option>
+                    <option value="priority">Priority</option>
+                    <option value="due-date">Due Date</option>
+                </select>
+            </div>
+            <a href="{% url 'create' %}" class="btn btn-success"><i class="fas fa-plus"></i> Create Task</a>
+        </header>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="table-responsive">
+                        <table id="task-table" class="table table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col" class="col-2">Title</th>
+                                    <th scope="col" class="col-4">Description</th>
+                                    <th scope="col" class="col-1">Priority</th>
+                                    <th scope="col" class="col-2">Due Date</th>
+                                    <th scope="col" class="col-1">Done</th>
+                                    <th scope="col" class="col-2">Done Date</th>
+                                    <th scope="col" class="col-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr id="task-row-{{ task.id }}" {% if task.done %}class="table-success"{% endif %} >
+                                    <td>{{ task.title }}</td>
+                                    <td>{{ task.description }}</td>
+                                    <td class="priority">{{ task.get_priority_display }}</td>
+                                    <td class="due-date">{{ task.task_due }}</td>
+                                    <td>
+                                        <input class="done" type="checkbox" id="done-checkbox-{{ task.id }}" {% if task.done %}checked{% endif %} onchange="updateTask(this)">
+                                    </td>
+                                    <td id="date-completed-{{ task.id }}">{{ task.date_completed }}</td>
+                                    <td>
+                                        <a href="{% url 'update' task.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                        <form action="{% url 'delete' task.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> <!-- row.// -->
+        </div> <!-- card-body .// -->
+
+    </article> <!-- order-group.// -->
+</main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function getCSRFToken() {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateTask(checkbox) {
+        var taskId = checkbox.id.split('-')[2];
+        var done = checkbox.checked;
+
+        // Obtener la fecha y hora actual en formato ISO 8601
+        var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+        var now = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
+        $.ajax({
+            type: "POST",
+            url: "{% url 'update_done' %}",
+            data: {
+                csrfmiddlewaretoken: getCSRFToken(),
+                task_id: taskId,
+                done: done,
+                date_completed: now
+            },
+            success: function(response) {
+                if (response.success) {
+                    checkbox.checked = response.done;
+                    // Llama a la función para resaltar tareas vencidas
+                    highlightOverdueTasks();
+                    var dateCompletedCell = document.getElementById('date-completed-' + taskId);
+                    if (response.done) {
+                        var dateCompleted = new Date(response.date_completed);
+                        dateCompletedCell.innerText = dateCompleted.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+                        checkbox.closest('tr').classList.add('table-success');
+                    } else {
+                        dateCompletedCell.innerText = '';
+                        checkbox.closest('tr').classList.remove('table-success');
+                    }
+                } else {
+                    console.error('Error al actualizar el estado de la tarea.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error de solicitud AJAX:', error);
+            }
+        });
+    }
+
+    // Función para comparar las fechas y aplicar el estilo rojo si la fecha de vencimiento es anterior a la fecha actual
+    function highlightOverdueTasks() {
+        console.log('hello')
+        var rows = document.querySelectorAll('tbody tr'); // Obtener todas las filas de la tabla
+        var currentDate = new Date(); // Obtener la fecha actual
+
+        rows.forEach(function(row) {
+            var dueDateCell = row.querySelector('.due-date'); // Obtener la celda de la fecha de vencimiento
+            var doneCell = row.querySelector('.done'); // Obtener la celda de la tarea realizada
+            if (doneCell.checked) {
+                row.classList.add('table-success'); // Agregar la clase 'table-success' para marcar la fila en verde
+                row.classList.remove('table-danger');
+            } else if (dueDateCell) {
+                var dueDateText = dueDateCell.textContent.trim(); // Obtener el texto de la celda y eliminar espacios en blanco
+                var dueDate = parseDate(dueDateText); // Convertir el texto de la fecha en un objeto de fecha
+                if (dueDate < currentDate) {
+                    row.classList.remove('table-success');
+                    row.classList.add('table-danger'); // Agregar la clase 'table-danger' para marcar la fila en rojo
+                }
+            }
+        });
+    }
+
+    // Función para convertir el texto de la fecha en un objeto de fecha
+    function parseDate(dateText) {
+        // Utilizar expresiones regulares para extraer las partes de la fecha y hora
+        var regex = /(\w+)\. (\d+), (\d+), (\d+):(\d+)\s([apAP]\.m\.)/;
+        var match = regex.exec(dateText);
+        if (match === null) {
+            console.error('Formato de fecha no válido:', dateText);
+            return null;
+        }
+    
+        var month = match[1];
+        var day = parseInt(match[2]);
+        var year = parseInt(match[3]);
+        var hour = parseInt(match[4]);
+        var minute = parseInt(match[5]);        
+        var ampm = match[6].toLowerCase();
+
+        // Convertir la hora al formato de 24 horas si es necesario
+        if (ampm === 'p.m.' && hour < 12) {
+            hour += 12;
+        } else if (ampm === 'a.m.' && hour === 12) {
+            hour = 0;
+        }
+    
+        // Convertir el nombre del mes a su número de índice
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var monthIndex = months.indexOf(month);
+    
+        // Crear un objeto de fecha en formato ISO 8601
+        var isoDateString = year + '-' + pad(monthIndex + 1, 2) + '-' + pad(day, 2) + 'T' + pad(hour, 2) + ':' + pad(minute, 2) + ':00';
+        var date = new Date(isoDateString);
+    
+        return date;
+    }
+    
+    // Función para rellenar ceros a la izquierda si es necesario
+    function pad(number, length) {
+        var str = String(number);
+        while (str.length < length) {
+            str = '0' + str;
+        }
+        return str;
+    }
+
+    //Ordenar la tabla de tareas
+    window.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('sort-select').addEventListener('change', function() {
+            sortTasks(this.value);
+        });
+
+        function sortTasks(option) {
+            var rows = Array.from(document.querySelectorAll('#task-table tbody tr'));
+            var sortedRows = rows.sort(function(a, b) {
+                var valueA, valueB;
+                if (option === 'priority') {
+                    var priorityCellA = a.querySelector('.priority');
+                    var priorityCellB = b.querySelector('.priority');
+                    valueA = getPriorityValue(priorityCellA.textContent.trim());
+                    valueB = getPriorityValue(priorityCellB.textContent.trim());
+                    console.log('a '+(valueA - valueB))
+                    return valueA - valueB;
+                } else if (option === 'due-date') {
+                    valueA = new Date(a.querySelector('.due-date').textContent);
+                    valueB = new Date(b.querySelector('.due-date').textContent);
+                    return valueA - valueB;
+                } else if (option === 'title') {
+                    valueA = a.querySelector('td:first-child').textContent;
+                    valueB = b.querySelector('td:first-child').textContent;
+                    return valueA.localeCompare(valueB);
+                }
+                
+            });
+        
+            var tbody = document.querySelector('#task-table tbody');
+            sortedRows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        }
+
+        function getPriorityValue(priorityText) {
+            switch (priorityText) {
+                case 'Lowest':
+                    return 5;
+                case 'Low':
+                    return 4;
+                case 'Normal':
+                    return 3;
+                case 'High':
+                    return 2;
+                case 'Highest':
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+    });
+    
+    // Llamar a la función cuando se cargue la página
+    window.addEventListener('DOMContentLoaded', function() {
+        highlightOverdueTasks();
+    });
+    setInterval(highlightOverdueTasks, 60000);
+</script>
+{% endblock %}
