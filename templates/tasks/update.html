@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} <!-- Inicia el bloque de contenido -->
 {% load static %}
 
 {% block content %}
@@ -10,8 +10,8 @@
                     <h2 class="text-center mb-0">Update Task</h2>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
-                        {% csrf_token %}
+                    <form method="POST"><!-- Formulario para enviar actualizar los datos de tarea -->
+                        {% csrf_token %} <!-- Token de seguridad -->
                         <div class="form-group">
                             <label for="id_title">Title:</label>
                             {{ form.title }}

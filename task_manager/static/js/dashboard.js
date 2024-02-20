@@ -25,7 +25,7 @@ function updateTask(checkbox) {
     var now = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
     $.ajax({
         type: "POST",
-        url: "{% url 'update_done' %}",
+        url: updateDoneUrl, // Utilizar la URL definida en la variable JavaScript
         data: {
             csrfmiddlewaretoken: getCSRFToken(),
             task_id: taskId,
@@ -58,7 +58,6 @@ function updateTask(checkbox) {
 
 // Función para resaltar tareas vencidas
 function highlightOverdueTasks() {
-    console.log('hello')
     var rows = document.querySelectorAll('tbody tr'); // Obtener todas las filas de la tabla
     var currentDate = new Date(); // Obtener la fecha actual
 
