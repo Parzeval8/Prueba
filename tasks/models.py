@@ -1,7 +1,8 @@
 from django.db import models
 from accounts.models import Account
 
-# Create your models here.
+
+# Modelo de tareas
 class Task(models.Model):
 
     PRIORITY_CHOICES = [

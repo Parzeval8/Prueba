@@ -10,42 +10,25 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.core.mail import EmailMessage
 
-# Create your views here.
+# Vista para el registro de usuarios
 def register(request):
+    # Inicializa el formulario de registro
     form = RegistrationForm()
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
+            # Obtiene los datos del formulario
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
             phone_number = form.cleaned_data['phone_number']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-            # vaxidrez@gmail.com
             username = email.split("@")[0]
+            # Crea un nuevo usuario con los datos del formulario
             user = Account.objects.create_user(first_name=first_name, last_name=last_name, email=email, username=username, password=password )
             user.phone_number = phone_number
             user.save()
-
-
-            #VERIFICACION PÓR EMAIL
-
-            # current_site = get_current_site(request)
-            # mail_subject = 'Por favor activa tu cuenta en Vaxi Drez'
-            # body = render_to_string('accounts/account_verification_email.html', {
-            #     'user': user,
-            #     'domain': current_site,
-            #     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            #     'token': default_token_generator.make_token(user),
-            # })
-            # to_email = email
-            # send_email = EmailMessage(mail_subject, body, to=[to_email])
-            # send_email.send()
-
-
-            # #messages.success(request, 'Se registro el usuario exitosamente')
-
-            # return redirect('/accounts/login/?command=verification&email='+email)
+            # Redirige al usuario a la pagina de inicio de sesion
             return redirect('/accounts/login/')
 
 
@@ -55,28 +38,33 @@ def register(request):
 
     return render(request, 'accounts/register.html', context)
 
+
+#Vista que permite el login de usuarios
 def login(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
-
+        # Autentica al usuario
         user = auth.authenticate(email=email, password=password)
         print(email, password)
         if user is not None:    
+            # Si la autenticación es exitosa, inicia sesión y redirige al dashboard
             auth.login(request, user)
-            messages.success(request, 'Has iniciado sesion exitosamente')
+            messages.success(request, 'You have logged in successfully')
             return redirect('dashboard')
         else:
-            messages.error(request, 'Las credenciales son incorrectas')
+            # Si la autenticación falla, muestra un mensaje de error y redirige al inicio de sesión
+            messages.error(request, 'The credentials are incorrect')
             return redirect('login')
 
 
     return render(request, 'accounts/login.html')
 
+#Vista para cerrar sesion
 @login_required(login_url='login')
 def logout(request):
+    # Cierra la sesión del usuario y redirige al inicio de sesión
     auth.logout(request)
-    messages.success(request, 'Has salido de sesion')
-
+    messages.success(request, 'You have logged out')
     return redirect('login')
 

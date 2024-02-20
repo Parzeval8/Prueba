@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+# Manejador personalizado para la gestión de usuarios
 class MyAccountManager(BaseUserManager):
+     # Funcion para crear un usuario estándar
     def create_user(self, first_name, last_name, email, username, password=None):
         if not email:
             raise ValueError('El usuario debe tener un email')
@@ -19,6 +21,7 @@ class MyAccountManager(BaseUserManager):
         user.save(using=self.db)
         return user
     
+    # funcion para crear un superusuario con privilegios adicionales
     def create_superuser(self, first_name, last_name, email, username, password):
         user =self.create_user(
             email = self.normalize_email(email),
@@ -36,7 +39,7 @@ class MyAccountManager(BaseUserManager):
         return user
 
 
-
+# Modelo de usuario personalizado
 class Account(AbstractBaseUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
