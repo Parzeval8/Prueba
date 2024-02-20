@@ -1,6 +1,7 @@
 from django.forms import ModelForm, DateTimeInput, Textarea
 from .models import Task
 
+#Formulario para la creacion de tareas
 class TaskForm(ModelForm):
     class Meta:
         model = Task

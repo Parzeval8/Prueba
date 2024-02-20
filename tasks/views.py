@@ -4,52 +4,49 @@ from django.contrib.auth.decorators import login_required
 from .forms import TaskForm
 from .models import Task
 
+#Vista para el dashboard de tareas
 @login_required(login_url='login')
 def dashboard(request):
+    # Obtiene todas las tareas del usuario actual
     tasks = Task.objects.filter(user=request.user)
     context = {'tasks': tasks}
     return render(request, 'tasks/dashboard.html', context)
 
+#Vista para crear una nueva tarea
 @login_required(login_url='login')
 def create(request):
     context = {'form' : TaskForm}
     if request.method == 'GET':
+        # Renderiza el formulario de creación de tarea
         return render(request, 'tasks/create.html', context)
     else:
+        # Procesa el formulario cuando se envía
         form = TaskForm(request.POST)
         new_task = form.save(commit=False)
         new_task.user = request.user
         new_task.save()
         return redirect('dashboard')
 
+# Vista para actualizar una tarea existente
 @login_required(login_url='login')
 def update(request, task_id):
+    # Obtiene la tarea específica del usuario actual
     task = get_object_or_404(Task, id=task_id, user=request.user)
     if request.method == 'GET':
+        # Renderiza el formulario de actualización de tarea con los datos de la tarea existente
         form = TaskForm(instance=task)  # Pasa la instancia de la tarea al formulario
         return render(request, 'tasks/update.html', {'form': form})
     elif request.method == 'POST':
+        # Procesa el formulario cuando se envía
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             form.save()
             return redirect('dashboard')
         else:
             return render(request, 'tasks/update.html', {'form': form})
-    task = get_object_or_404(Task, id=task_id, user=request.user)
-    print(task)
-    if request.method == 'GET':
-        form = TaskForm(instance=task)
-        return render(request, 'tasks/update.html', {'form': form, 'task': task})
-    elif request.method == 'POST':
-        form = TaskForm(request.POST, instance=task)
-        if form.is_valid():
-            form.save()
-            return redirect('dashboard')
-        else:
-            print(form)
-            # En caso de que el formulario no sea válido, vuelve a renderizar el formulario con los errores
-            return render(request, 'tasks/update.html', {'form': form, 'task': task})
+        
 
+# Vista para actualizar el estado de una tarea (marcar como completada o incompleta)
 @login_required(login_url='login')
 def update_done(request):
     if request.method == 'POST' and request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -67,8 +64,10 @@ def update_done(request):
         return JsonResponse({'success': True, 'done': done, 'date_completed': str(task.date_completed)})
     return JsonResponse({'success': False})
 
+# Vista para eliminar una tarea
 @login_required(login_url='login')
 def delete(request, task_id):
+    # Obtiene la tarea específica del usuario actual y la elimina
     task = get_object_or_404(Task, id=task_id, user=request.user)
     if request.method == 'POST':
         task.delete()
